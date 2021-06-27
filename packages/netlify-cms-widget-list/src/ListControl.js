@@ -8,7 +8,7 @@ import { partial, isEmpty } from 'lodash';
 import uuid from 'uuid/v4';
 import { SortableContainer, SortableElement, SortableHandle } from 'react-sortable-hoc';
 import NetlifyCmsWidgetObject from 'netlify-cms-widget-object';
-import { ListItemTopBar, ObjectWidgetTopBar, colors, lengths } from 'netlify-cms-ui-default';
+import { ListItemTopBar, ObjectWidgetTopBar, colors, lengths, FieldLabel } from 'netlify-cms-ui-default';
 import { stringTemplate, validations } from 'netlify-cms-lib-widgets';
 
 import {
@@ -90,6 +90,17 @@ function validateItem(field, item) {
   }
 
   return true;
+}
+
+function LabelComponent({ field, isActive, hasErrors, uniqueFieldId, isFieldOptional, t }) {
+  const label = `${field.get('label', field.get('name'))}`;
+  const labelComponent = (
+    <FieldLabel isActive={isActive} hasErrors={hasErrors} htmlFor={uniqueFieldId}>
+      {label} {`${isFieldOptional ? ` (${t('editor.editorControl.field.optional')})` : ''}`}
+    </FieldLabel>
+  );
+
+  return labelComponent;
 }
 
 export default class ListControl extends React.Component {
@@ -482,13 +493,16 @@ export default class ListControl extends React.Component {
       resolveWidget,
       parentIds,
       forID,
+      t
     } = this.props;
-
+    console.log("[this.props]", this.props)
+    console.log("[this.state]", this.state)
     const { itemsCollapsed, keys } = this.state;
     const collapsed = itemsCollapsed[index];
     const key = keys[index];
     let field = this.props.field;
     const hasError = this.hasError(index);
+    const isFieldOptional = field.get('required') === false;
 
     if (this.getValueType() === valueTypes.MIXED) {
       field = getTypedFieldForValue(field, item);
@@ -503,6 +517,14 @@ export default class ListControl extends React.Component {
         index={index}
         key={key}
       >
+        <LabelComponent
+          field={field}
+          isActive={false}
+          hasErrors={hasError}
+          uniqueFieldId={this.uniqueFieldId}
+          isFieldOptional={isFieldOptional}
+          t={t}
+        />
         <StyledListItemTopBar
           collapsed={collapsed}
           onCollapseToggle={partial(this.handleItemCollapseToggle, index)}
